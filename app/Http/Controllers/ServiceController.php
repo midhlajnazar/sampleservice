@@ -18,7 +18,8 @@ class ServiceController extends Controller
 
         return Inertia::render('services/Index', [
             'services' => ServiceResource::collection($services)->resolve(),
-            'categories' => Service::active()->distinct()->pluck('category'),
+            // Not the active() scope: its ORDER BY columns aren't selected, which MySQL rejects with DISTINCT.
+            'categories' => Service::where('is_active', true)->distinct()->orderBy('category')->pluck('category'),
             'filters' => ['category' => $request->query('category')],
         ]);
     }
