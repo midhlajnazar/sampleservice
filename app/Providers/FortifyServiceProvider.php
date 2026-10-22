@@ -51,6 +51,11 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn (Request $request) => Inertia::render('auth/Login', [
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'status' => $request->session()->get('status'),
+            // Seeded demo logins (see DatabaseSeeder), offered only on a local debug build.
+            'demoAccounts' => config('app.debug') && app()->environment('local') ? [
+                ['label' => 'Admin', 'email' => 'admin@example.com', 'password' => 'password'],
+                ['label' => 'Applicant', 'email' => 'test@example.com', 'password' => 'password'],
+            ] : [],
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/ResetPassword', [

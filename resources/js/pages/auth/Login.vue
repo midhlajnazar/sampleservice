@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -20,10 +21,22 @@ defineOptions({
     },
 });
 
-defineProps<{
+type DemoAccount = { label: string; email: string; password: string };
+
+const props = defineProps<{
     status?: string;
     canResetPassword: boolean;
+    demoAccounts: DemoAccount[];
 }>();
+
+// In local debug builds the first demo account (admin) is pre-filled.
+const email = ref(props.demoAccounts[0]?.email ?? '');
+const password = ref(props.demoAccounts[0]?.password ?? '');
+
+function useAccount(account: DemoAccount) {
+    email.value = account.email;
+    password.value = account.password;
+}
 </script>
 
 <template>
@@ -34,6 +47,25 @@ defineProps<{
         class="mb-4 text-center text-sm font-medium text-green-600"
     >
         {{ status }}
+    </div>
+
+    <div
+        v-if="demoAccounts.length"
+        class="mb-4 rounded-lg border border-dashed border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+    >
+        <p class="mb-2 font-medium">Debug mode: demo accounts</p>
+        <div class="flex flex-wrap gap-2">
+            <button
+                v-for="account in demoAccounts"
+                :key="account.email"
+                type="button"
+                class="rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-medium hover:bg-amber-100"
+                :class="email === account.email ? 'ring-2 ring-amber-400' : ''"
+                @click="useAccount(account)"
+            >
+                {{ account.label }} · {{ account.email }}
+            </button>
+        </div>
     </div>
 
     <PasskeyVerify />
@@ -51,6 +83,7 @@ defineProps<{
                     id="email"
                     type="email"
                     name="email"
+                    v-model="email"
                     required
                     v-focus
                     :tabindex="1"
@@ -75,6 +108,7 @@ defineProps<{
                 <PasswordInput
                     id="password"
                     name="password"
+                    v-model="password"
                     required
                     :tabindex="2"
                     autocomplete="current-password"

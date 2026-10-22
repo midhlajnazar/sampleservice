@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
@@ -17,6 +18,23 @@ class AuthenticationTest extends TestCase
         $response = $this->get(route('login'));
 
         $response->assertOk();
+    }
+
+    public function test_demo_accounts_are_offered_only_in_local_debug()
+    {
+        $this->get(route('login'))
+            ->assertInertia(fn (Assert $page) => $page->where('demoAccounts', []));
+
+        $this->app['env'] = 'local';
+        config(['app.debug' => true]);
+
+        $this->get(route('login'))
+            ->assertInertia(fn (Assert $page) => $page->where('demoAccounts.0.email', 'admin@example.com'));
+
+        config(['app.debug' => false]);
+
+        $this->get(route('login'))
+            ->assertInertia(fn (Assert $page) => $page->where('demoAccounts', []));
     }
 
     public function test_users_can_authenticate_using_the_login_screen()
